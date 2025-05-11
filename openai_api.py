@@ -38,12 +38,12 @@ def gpt_reasoning(user_input):
 
     return gpt_response
 
-def gpt_predictor(ticker, date):
+def gpt_predictor(ticker, dates):
     prompts = [
         f"What is the current price of {ticker}?",
         f"Search the web for {ticker}  90 day price history and output weekly highs and lows.",
         f"Search the web for any industry news that pertains to {ticker}, including social an political events that could impact the stock sentiment.",
-        f"Based on the above information and disregarding external analyst predictions, predict a single closing price for {ticker} EOD on date {date} formatted YYMMDD. Do not provide any explanation. Print ONLY the predicted price in format $xx.xx."
+        f'Based on the above information and disregarding external analyst predictions, predict a single closing price for {ticker} for each day EOD on and array of dates {dates} formatted YYMMDD. Do not provide any explanation. Print ONLY the predicted prices in format xx.xx,xx.xx.'
     ]
 
     print("Getting current price...")
@@ -56,8 +56,16 @@ def gpt_predictor(ticker, date):
     gpt_web_search(prompts[2])
 
     print("Thinking...")
-    prediction = gpt_reasoning(prompts[3])
-
-    print(f"{ticker} {date} {prediction}")
-    
-    return prediction
+    prices = gpt_reasoning(prompts[3])
+    prices = prices.split(",")
+    predictions = []
+    for i in range(len(dates)):
+        prediction = {
+            "ticker": ticker,
+            "date": dates[i],
+            "prediction": float(prices[i])
+        }
+        predictions.append(prediction)
+        print(f"{ticker} {dates[i]} {prices[i]}")
+        
+    return predictions

@@ -95,14 +95,14 @@ def get_greeks(df_contracts, ticker, date, prediction):
         df_contracts[col] = "0"
 
     for index, contract in tqdm(df_contracts.iterrows(), total=len(df_contracts), desc=f"Fetching Greeks for {ticker}"):
-        if ((float(prediction[1:]) >= float(contract["last_trade"])) and
+        if ((prediction >= float(contract["last_trade"])) and
             contract["call_put"] == "P" and
             contract['expiryDate'] == date):
 
             url_greeks = f"https://api.nasdaq.com/api/quote/{ticker}/option-chain?assetclass=stocks&recordID={contract.nasdaq_ticker}"
             data = fetch_data(url_greeks)
 
-        elif ((float(prediction[1:]) < float(contract["last_trade"])) and
+        elif ((prediction < float(contract["last_trade"])) and
             contract["call_put"] == "C" and
             contract["expiryDate"] == date):
             

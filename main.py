@@ -1,12 +1,13 @@
 import nasdaq_api
 import openai_api
 import trade_finder
+import pandas as pd
 
 
 tickers = [
     "AAPL",
     "MSFT",
-    "NVDA"
+    # "NVDA"
 ]
 
 def main():
@@ -17,14 +18,8 @@ def main():
         df_contracts = nasdaq_api.get_contract_list(ticker)
         unique_dates = df_contracts['expiryDate'].unique()
 
-        for date in unique_dates:
-            gpt_prediction = openai_api.gpt_predictor(ticker, date)
-            predictions.append({
-                "ticker": ticker,
-                "date": date,
-                "prediction": gpt_prediction
-            })
-            print()
+        predictions = openai_api.gpt_predictor(ticker, unique_dates)
+        print()
 
         for prediction in predictions:
             df_greeks = nasdaq_api.get_greeks(
@@ -36,12 +31,17 @@ def main():
             tables.append(df_greeks)
 
         print()
+        df_trades = pd.DataFrame(columns=["Stock", "Ticker", "Call/Put", "Strike Cred.", "Strike Deb.", "Mid Credit", "Mid Debit", "Max Prof", "Max Loss", "ROI"])
         for table in tables:
-            trade_finder.find_trades(table)
+            df_trades = trade_finder.find_trades(table, df_trades)
+            
+        print()
+        print(df_trades)
 
-    print()
-    print(tables)
+    # print()
+    # print(tables)
     
 
 if __name__ == "__main__":
+    # pass
     main()
