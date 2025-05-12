@@ -1,13 +1,17 @@
 import nasdaq_api
 import openai_api
+import grok_api
 import trade_finder
 import pandas as pd
 
 
 tickers = [
-    "AAPL",
-    "MSFT",
-    # "NVDA"
+    # "AAPL",
+    # "MSFT",
+    "NVDA",
+    "AXP",
+    "CAT"
+
 ]
 
 def main():
@@ -16,9 +20,11 @@ def main():
 
     for ticker in tickers:
         df_contracts = nasdaq_api.get_contract_list(ticker)
+        price_history = nasdaq_api.get_price_history(ticker)
         unique_dates = df_contracts['expiryDate'].unique()
 
-        predictions = openai_api.gpt_predictor(ticker, unique_dates)
+        messages = openai_api.gpt_research(ticker, unique_dates)
+        predictions = grok_api.grok_predictor(messages, ticker, unique_dates, price_history)
         print()
 
         for prediction in predictions:
@@ -31,12 +37,23 @@ def main():
             tables.append(df_greeks)
 
         print()
-        df_trades = pd.DataFrame(columns=["Stock", "Ticker", "Call/Put", "Strike Cred.", "Strike Deb.", "Mid Credit", "Mid Debit", "Max Prof", "Max Loss", "ROI"])
+        df_trades = pd.DataFrame(columns=[
+            "Stock",
+            "Ticker",
+            "Call/Put",
+            "Strike Cred.",
+            "Strike Deb.",
+            "Mid Credit",
+            "Mid Debit",
+            "Max Prof",
+            "Max Loss",
+            "ROI"])
+        
         for table in tables:
             df_trades = trade_finder.find_trades(table, df_trades)
             
-        print()
-        print(df_trades)
+    print()
+    print(df_trades)
 
     # print()
     # print(tables)

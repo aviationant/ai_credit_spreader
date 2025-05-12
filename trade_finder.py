@@ -34,7 +34,8 @@ def find_trades_long(df_all, df_trades):
                     "Mid Debit": mid_price_debit,
                     "Max Prof": max_profit,
                     "Max Loss": max_loss,
-                    "ROI": roi
+                    "ROI": roi,
+                    "Delta": row["delta"]
                 }
 
                 if len(df_trades):
@@ -84,7 +85,8 @@ def find_trades_short(df_all, df_trades):
                     "Mid Debit": mid_price_debit,
                     "Max Prof": max_profit,
                     "Max Loss": max_loss,
-                    "ROI": roi
+                    "ROI": roi,
+                    "Delta": row["delta"]
                 }
                 
                 if len(df_trades):

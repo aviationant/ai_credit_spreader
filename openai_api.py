@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 import os
 from time import sleep
 from tqdm import tqdm
+from datetime import datetime, timedelta
+import grok_api
 
 load_dotenv("./.env")
 OPENAI_API = os.environ.get("OPENAI_API_KEY")
@@ -16,7 +18,10 @@ def gpt_web_search(user_input):
     messages.append({"role": "user", "content": user_input})
     response = client.responses.create(
         model="gpt-4o",
-        tools=[{"type": "web_search_preview"}],
+        tools=[{
+            "type": "web_search_preview",
+            "search_context_size": "high",
+            }],
         input=user_input
     )
     gpt_response = response.output_text
@@ -28,44 +33,23 @@ def gpt_reasoning(user_input):
     messages.append({"role": "user", "content": user_input})
     response = client.responses.create(
         model="gpt-4o",
-        reasoning={
-            "summary": "auto"
-            },
-        input=messages
+        input=messages,
+        # temperature=1,
+        # top_p=0.8
     )
     gpt_response = response.output_text
+    print(gpt_response)
     messages.append({"role": "assistant", "content": gpt_response})
 
     return gpt_response
 
-def gpt_predictor(ticker, dates):
+def gpt_research(ticker, dates):
+    today = datetime.now()
     prompts = [
-        f"What is the current price of {ticker}?",
-        f"Search the web for {ticker}  90 day price history and output weekly highs and lows.",
         f"Search the web for any industry news that pertains to {ticker}, including social an political events that could impact the stock sentiment.",
-        f'Based on the above information and disregarding external analyst predictions, predict a single closing price for {ticker} for each day EOD on and array of dates {dates} formatted YYMMDD. Do not provide any explanation. Print ONLY the predicted prices in format xx.xx,xx.xx.'
     ]
 
-    print("Getting current price...")
-    gpt_web_search(prompts[0])
-
-    print("Getting price history...")
-    gpt_web_search(prompts[1])
-
     print("Studying recent events...")
-    gpt_web_search(prompts[2])
-
-    print("Thinking...")
-    prices = gpt_reasoning(prompts[3])
-    prices = prices.split(",")
-    predictions = []
-    for i in range(len(dates)):
-        prediction = {
-            "ticker": ticker,
-            "date": dates[i],
-            "prediction": float(prices[i])
-        }
-        predictions.append(prediction)
-        print(f"{ticker} {dates[i]} {prices[i]}")
-        
-    return predictions
+    gpt_web_search(prompts[0])
+    
+    return messages
