@@ -16,9 +16,9 @@ def grok_request(messages, user_input):
     )
 
     completion = client.chat.completions.create(
-        model="grok-3-latest", # or "grok-3-mini-fast-beta"
+        model="grok-3-mini-fast-beta", # or "grok-3-mini-fast-beta"
         messages=messages,
-        temperature=1.4
+        # temperature=1.4
     )
 
     return completion.choices[0].message.content
@@ -33,14 +33,9 @@ def grok_predictor(messages, ticker, dates, price_history):
     
     print("Thinking...")
     prices = []
-    price_responses = []
-    for j in tqdm(range(3), desc="Asking Grok...", total=3):
+    for j in tqdm(range(1), desc="Asking Grok...", total=1):
         price_response = grok_request(messages, prompts[0])
-        price_responses.append(price_response.split(","))
-
-    for k in range(3):
-        avg_price = (float(price_responses[0][k]) + float(price_responses[1][k]) + float(price_responses[2][k])) / 3
-        prices.append(avg_price)
+        prices = price_response.split(",")
         
     predictions = []
     for i in range(len(dates)):

@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from time import sleep
 from tqdm import tqdm
+import re
 
 DELTA_MAX = 0.3
 DELTA_MIN = 0.1
@@ -28,11 +29,13 @@ def convert_date(date_string):
     date_obj = datetime.strptime(f"{date_string} 2025", "%b %d %Y")
     return [date_obj, date_obj.strftime("%y%m%d")]
 
-def parse_contracts(data, ticker):
+def parse_contracts(data, ticker, df_contracts):
     contracts = []
+
     today = datetime.today()
     data = json.loads(data)
-    last_trade = data.get('data', {}).get('lastTrade')[13:19]
+    last_trade = re.search("\$(\d+\.?\d*)", data.get('data', {}).get('lastTrade'))
+    last_trade = last_trade.group(1)
     rows = data.get('data', {}).get('table', {}).get('rows', {})
     for row in rows:
         if row['expiryDate'] and (convert_date(row["expiryDate"])[0] - today) > timedelta(6):
@@ -41,24 +44,35 @@ def parse_contracts(data, ticker):
             else:
                 call_put = "C"
             contract = {
-                "underlyingTicker": ticker,
-                "expiryDate": row['expiryDate'],
+                "stock": ticker,
+                "expiry_date": row['expiryDate'],
                 "last_trade": last_trade,
                 "strike": row['strike'],
                 "call_put": call_put,
                 "ticker": "",
                 "nasdaq_ticker": "",
+                "delta": 0,
+                "gamma": 0,
+                "rho": 0,
+                "theta": 0,
+                "vega": 0,
+                "imp_vol": 0,
+                "bid": 0,
+                "ask": 0
             }
-            contracts.append(contract)
-    df = pd.DataFrame(contracts)
-    for index, contract in df.iterrows():
-        contract.expiryDate = convert_date(contract.expiryDate)[1]
-        contract.strike = "000" + contract.strike[:-3] + contract.strike[-2:] + "0"
-        contract.strike = contract.strike[-8:]
-        contract.ticker = contract.underlyingTicker + contract.expiryDate + contract.call_put + contract.strike
-        contract.nasdaq_ticker = (contract.underlyingTicker.lower() + "-----")[:6] + contract.expiryDate + "c" + contract.strike
 
-    return df
+            
+            contract = pd.DataFrame(contract, index=[len(df_contracts)])
+            df_contracts = pd.concat([df_contracts, contract], ignore_index=False)
+    
+    for index, contract in df_contracts.iterrows():
+        if contract.stock == ticker:
+            df_contracts.loc[index, "expiry_date"] = convert_date(contract.expiry_date)[1]
+            df_contracts.loc[index, "strike"] = ("000" + contract.strike[:-3] + contract.strike[-2:] + "0")[-8:]
+            df_contracts.loc[index, "ticker"] = contract.stock + convert_date(contract.expiry_date)[1] + contract.call_put + ("000" + contract.strike[:-3] + contract.strike[-2:] + "0")[-8:]
+            df_contracts.loc[index, "nasdaq_ticker"] = (contract.stock.lower() + "-----")[:6] + convert_date(contract.expiry_date)[1] + "c" + ("000" + contract.strike[:-3] + contract.strike[-2:] + "0")[-8:]
+
+    return df_contracts
 
 def parse_greeks_prices(contract, data):
     data = json.loads(data)
@@ -89,22 +103,17 @@ def parse_greeks_prices(contract, data):
 
 
 def get_greeks(df_contracts, ticker, date, prediction):
-    greek_columns = ["delta", "gamma", "rho", "theta", "vega", "impVol"]
-    price_columns = ["bid", "ask"]
-    for col in greek_columns + price_columns:
-        df_contracts[col] = "0"
-
     for index, contract in tqdm(df_contracts.iterrows(), total=len(df_contracts), desc=f"Fetching Greeks for {ticker}"):
-        if ((prediction >= float(contract["last_trade"])) and
-            contract["call_put"] == "P" and
-            contract['expiryDate'] == date):
+        if ((prediction >= float(contract.last_trade)) and
+            contract.call_put == "P" and
+            contract.expiry_date == date):
 
             url_greeks = f"https://api.nasdaq.com/api/quote/{ticker}/option-chain?assetclass=stocks&recordID={contract.nasdaq_ticker}"
             data = fetch_data(url_greeks)
 
-        elif ((prediction < float(contract["last_trade"])) and
-            contract["call_put"] == "C" and
-            contract["expiryDate"] == date):
+        elif ((prediction < float(contract.last_trade)) and
+            contract.call_put == "C" and
+            contract.expiry_date == date):
             
             url_greeks = f"https://api.nasdaq.com/api/quote/{ticker}/option-chain?assetclass=stocks&recordID={contract.nasdaq_ticker}"
             data = fetch_data(url_greeks)
@@ -118,6 +127,7 @@ def get_greeks(df_contracts, ticker, date, prediction):
                 df_contracts.at[index, col] = value
             for col, value in prices_dict.items():
                 df_contracts.at[index, col] = value
+
             
     df_greeks = df_contracts[
         (abs((df_contracts['delta'].astype(float))) >= DELTA_MIN) &
@@ -135,14 +145,12 @@ def get_price_history(ticker):
     return data
     
 
-def get_contract_list(ticker):
+def get_contract_list(ticker, df_contracts):
     today = datetime.now().strftime("%Y-%m-%d")[:10]
     one_month = (datetime.now() + timedelta(30)).strftime("%Y-%m-%d")[:10]
     url_contracts = f"https://api.nasdaq.com/api/quote/{ticker}/option-chain?assetclass=stocks&limit=100&fromdate={today}&todate={one_month}&excode=oprac&callput=callput&money=at&type=all"
     data = fetch_data(url_contracts)
-    df_contracts = parse_contracts(data, ticker)
+    df_contracts = parse_contracts(data, ticker, df_contracts)
     print("Fetched: ", ticker)
 
     return df_contracts
-
-get_price_history("AAPL")
