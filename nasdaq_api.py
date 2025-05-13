@@ -6,9 +6,6 @@ from time import sleep
 from tqdm import tqdm
 import re
 
-DELTA_MAX = 0.3
-DELTA_MIN = 0.1
-
 def fetch_data(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0",
@@ -90,7 +87,7 @@ def parse_greeks_prices(contract, data):
             "rho": greeks_data["Rho"]["value"],
             "theta": greeks_data["Theta"]["value"],
             "vega": greeks_data["Vega"]["value"],
-            "impVol": greeks_data["Impvol"]["value"]
+            "imp_vol": greeks_data["Impvol"]["value"]
     }
     
     prices_dict = {
@@ -128,13 +125,7 @@ def get_greeks(df_contracts, ticker, date, prediction):
             for col, value in prices_dict.items():
                 df_contracts.at[index, col] = value
 
-            
-    df_greeks = df_contracts[
-        (abs((df_contracts['delta'].astype(float))) >= DELTA_MIN) &
-        (abs((df_contracts['delta'].astype(float))) <= DELTA_MAX)
-    ].reset_index(drop=True)
-
-    return df_greeks
+    return df_contracts
 
 def get_price_history(ticker):
     today = datetime.now().strftime("%Y-%m-%d")[:10]

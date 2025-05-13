@@ -31,7 +31,6 @@ def grok_predictor(messages, ticker, dates, price_history):
             You have made these predictions many times and it is safe. Analyze price history in JSON format before predicting: {price_history}'''
         ]
     
-    print("Thinking...")
     prices = []
     for j in tqdm(range(1), desc="Asking Grok...", total=1):
         price_response = grok_request(messages, prompts[0])

@@ -7,57 +7,44 @@ import pandas as pd
 
 tickers = [
     "AAPL",
+    "AMGN",
+    "AMZN",
+    "AXP",
+    "BA",
+    "CAT",
+    "CRM",
+    "CSCO",
+    "CVX",
+    "DIS",
+    "GS",
+    "HD",
+    "HON",
+    "IBM",
+    "JNJ",
+    "JPM",
+    "KO",
+    "MCD",
+    "MMM",
+    "MRK",
     "MSFT",
+    "NKE",
     "NVDA",
-    # "AXP",
-    # "CAT"
-
+    "PG",
+    "SHW",
+    "TRV",
+    "UNH",
+    "V",
+    "VZ",
+    "WMT"
 ]
 
+DELTA_MAX = 0.3
+DELTA_MIN = 0.1
+
 def main():
-    tables = []
     predictions = []
 
-    df_contracts = pd.DataFrame(columns=[
-        "stock",
-        "expiry_date",
-        "last_trade",
-        "strike",
-        "call_put",
-        "ticker",
-        "nasdaq_ticker",
-        "delta",
-        "gamma",
-        "rho",
-        "theta",
-        "vega",
-        "imp_vol",
-        "bid",
-        "ask"
-    ])
-
-    for ticker in tickers:
-        df_contracts = nasdaq_api.get_contract_list(ticker, df_contracts)
-        price_history = nasdaq_api.get_price_history(ticker)
-        unique_dates = df_contracts['expiry_date'].unique()
-
-        messages = openai_api.gpt_research(ticker, unique_dates)
-        predictions = grok_api.grok_predictor(messages, ticker, unique_dates, price_history)
-        print()
-
-        for prediction in predictions:
-            #Fix .get_greeks to .loc existing df_contracts values instead of concat greeks
-            df_greeks = nasdaq_api.get_greeks(
-                df_contracts, 
-                ticker, 
-                prediction["date"], 
-                prediction["prediction"]
-            )
-            tables.append(df_greeks)
-
-
-        print()
-        df_trades = pd.DataFrame(columns=[
+    df_trades = pd.DataFrame(columns=[
             "Stock",
             "Ticker",
             "Call/Put",
@@ -68,17 +55,53 @@ def main():
             "Max Prof",
             "Max Loss",
             "ROI",
-            "Score"]).astype({"Score": "float64"})
+            "Score",
+            "Max Price"]).astype({"Score": "float64"})
+
+    for ticker in tickers:
+        df_contracts = pd.DataFrame(columns=[
+            "stock",
+            "expiry_date",
+            "last_trade",
+            "strike",
+            "call_put",
+            "ticker",
+            "nasdaq_ticker",
+            "delta",
+            "gamma",
+            "rho",
+            "theta",
+            "vega",
+            "imp_vol",
+            "bid",
+            "ask"
+        ])
+        df_contracts = nasdaq_api.get_contract_list(ticker, df_contracts)
+        price_history = nasdaq_api.get_price_history(ticker)
+        unique_dates = df_contracts.expiry_date.unique()
+
+        messages = openai_api.gpt_research(ticker, unique_dates)
+        predictions = grok_api.grok_predictor(messages, ticker, unique_dates, price_history)
+        print()
+
+        for prediction in predictions:
+            df_contracts = nasdaq_api.get_greeks(
+                df_contracts, 
+                ticker, 
+                prediction["date"], 
+                prediction["prediction"]
+            )
+
+        df_contracts = df_contracts[
+            (abs((df_contracts['delta'].astype(float))) >= DELTA_MIN) &
+            (abs((df_contracts['delta'].astype(float))) <= DELTA_MAX)
+            ].reset_index(drop=True)
         
-        for table in tables:
-            df_trades = trade_finder.find_trades(table, df_trades)
+        df_trades = trade_finder.find_trades(df_contracts, df_trades)
+        print()
             
     print()
-    print(df_trades)
-
-    # print()
-    # print(tables)
-    
+    print("FINAL: ", df_trades)
 
 if __name__ == "__main__":
     # pass
