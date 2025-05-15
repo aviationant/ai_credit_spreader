@@ -1,0 +1,6 @@
+setup.py
+Credit_Spreader.egg-info/PKG-INFO
+Credit_Spreader.egg-info/SOURCES.txt
+Credit_Spreader.egg-info/dependency_links.txt
+Credit_Spreader.egg-info/requires.txt
+Credit_Spreader.egg-info/top_level.txt
