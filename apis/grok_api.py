@@ -2,11 +2,10 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 from tqdm import tqdm
+from datetime import date
 
 load_dotenv('./.env')
 GROK_API_KEY = os.environ.get("GROK_API_KEY")
-
-
 
 def grok_request(messages, user_input):
     messages.append({"role": "user", "content": user_input})
@@ -23,7 +22,8 @@ def grok_request(messages, user_input):
 
     return completion.choices[0].message.content
 
-def grok_predictor(messages, ticker, dates, price_history):
+def grok_predictor(messages, ticker, dates, price_history, last_trade):
+    today = date.today()
     prompts = [
         f'''Based on the above information and disregarding external analyst predictions, predict a single closing price for {ticker} for each day EOD on and array of dates {dates} formatted YYMMDD. 
             Do not provide any explanation. Print ONLY the predicted prices in format xx.xx,xx.xx. If there is only one date, there should only be one price as xx.xx. 
@@ -39,8 +39,10 @@ def grok_predictor(messages, ticker, dates, price_history):
     predictions = []
     for i in range(len(dates)):
         prediction = {
+            "date": today.strftime("%Y-%m-%d"),
+            "current_price": last_trade,
             "ticker": ticker,
-            "date": dates[i],
+            "expiry_date": dates[i],
             "prediction": float(prices[i])
         }
         predictions.append(prediction)

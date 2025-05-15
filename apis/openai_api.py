@@ -4,7 +4,6 @@ import os
 from time import sleep
 from tqdm import tqdm
 from datetime import datetime, timedelta
-import grok_api
 
 load_dotenv("./.env")
 OPENAI_API = os.environ.get("OPENAI_API_KEY")
