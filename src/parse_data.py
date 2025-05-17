@@ -9,7 +9,8 @@ CONTRACT_DAYS_MIN=float(os.environ.get("CONTRACT_DAYS_MIN"))
 CONTRACT_DAYS_MAX=float(os.environ.get("CONTRACT_DAYS_MAX"))
 
 def extract_last_trade(ticker, data: json) -> None:
-    last_trade = re.search("\$(\d+\.?\d*)", data.get('data', {}).get('lastTrade'))
+    last_trade_string = data.get('data', {}).get('lastTrade')
+    last_trade = re.search("\$(\d+\.?\d*)", last_trade_string)
     ticker.last_trade = float(last_trade.group(1))
 
 def convert_date(date_string) -> list[date, str]:

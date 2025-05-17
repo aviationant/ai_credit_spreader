@@ -6,8 +6,8 @@ from pymongo.database import Database
 from src.price_predictor import price_predictor
 import os
 
-DELTA_MAX = os.environ.get("DELTA_MAX")
-DELTA_MIN = os.environ.get("DELTA_MIN")
+DELTA_MAX = float(os.environ.get("DELTA_MAX"))
+DELTA_MIN = float(os.environ.get("DELTA_MIN"))
 
 class Ticker:
     def __init__(self, ticker: str, db: Database) -> None:
@@ -35,8 +35,17 @@ class Ticker:
         for index, prediction in self.df_predictions.iterrows():
             get_greeks(self, prediction)
 
-    def filter_contracts(self) -> None:
+    def filter_contracts_by_prediction(self) -> None:
+        
         self.df_contracts = self.df_contracts[
-            (abs((self.df_contracts['delta'].astype(float))) >= DELTA_MIN) &
-            (abs((self.df_contracts['delta'].astype(float))) <= DELTA_MAX)
+            ((self.df_contracts.last_trade <= self.df_contracts.prediction) &
+             (self.df_contracts.call_put == "P")) |
+            ((self.df_contracts.last_trade >= self.df_contracts.prediction) &
+             (self.df_contracts.call_put == "C"))
+            ].reset_index(drop=True)
+
+    def filter_contracts_by_greeks(self) -> None:
+        self.df_contracts = self.df_contracts[
+            (abs((self.df_contracts['delta'])) >= DELTA_MIN) &
+            (abs((self.df_contracts['delta'])) <= DELTA_MAX)
             ].reset_index(drop=True)
