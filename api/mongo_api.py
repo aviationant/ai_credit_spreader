@@ -9,9 +9,9 @@ def connect_to_db():
     db: Database = client.creditSpreader
     return db
 
-def get_db_predictions(db):
+def get_db_predictions(db, ticker):
     predictions = db["predictions"]
-    return list(predictions.find())
+    return list(predictions.find( { "ticker": ticker.ticker }))
 
 def add_db_items(db, records):
     try:
