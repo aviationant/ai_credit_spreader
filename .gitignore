@@ -24,3 +24,5 @@ build/
 *.env  # Environment variables (e.g., MONGO_URI)
 __pycache__/parse_data.cpython-310.pyc
 .gitignore
+.ssh
+.ssh/
