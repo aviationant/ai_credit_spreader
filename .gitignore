@@ -1,1 +1,26 @@
 .env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Package artifacts
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Other common exclusions
+.DS_Store  # macOS
+*.log
+*.env  # Environment variables (e.g., MONGO_URI)
+__pycache__/parse_data.cpython-310.pyc
+.gitignore
