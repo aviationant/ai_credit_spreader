@@ -1,7 +1,7 @@
 from pymongo.database import Database
 from api.mongo_api import get_db_predictions, add_db_items
-from api.openai_api import gpt_research
-from api.grok_api import grok_predictor
+#from api.openai_api import gpt_research
+#from api.grok_api import grok_predictor
 import pandas as pd
 from datetime import date
 from utils.conversions import convert_df_to_float
@@ -15,8 +15,9 @@ def check_if_predicted(ticker, today: date) -> bool:
     return True
 
 def predict_prices(ticker) -> None:
-    messages = gpt_research(ticker)
-    ticker.predictions = grok_predictor(messages, ticker)
+    #messages = gpt_research(ticker)
+    #ticker.predictions = grok_predictor(messages, ticker)
+    print("here")
 
 def prediction_formatter(ticker, prices: list[float], today: str) -> list[dict]:
     predictions = []

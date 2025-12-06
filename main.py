@@ -1,13 +1,16 @@
+from dotenv import load_dotenv
+load_dotenv("./.env")
 from pymongo.database import Database
 from src.trade_finder import find_trades
 from src.classes.ticker_class import Ticker
 from api.mongo_api import connect_to_db
-from dotenv import load_dotenv
 import os
 
-load_dotenv("./.env")
+
 ticker_string = os.environ.get("TICKERS")
 tickers = ticker_string.split(",")
+
+print(ticker_string)
 
 def main():
     db: Database = connect_to_db()

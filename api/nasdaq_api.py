@@ -36,6 +36,13 @@ def get_greeks(ticker, prediction: dict):
         except:
             continue
 
+def get_price_history_504(ticker):
+    today = datetime.now().strftime("%Y-%m-%d")[:10]
+    past_90_days = (datetime.now() - timedelta(90)).strftime("%Y-%m-%d")[:10]
+    url_price_hist = f"https://api.nasdaq.com/api/quote/{ticker.ticker}/historical?assetclass=stocks&fromdate={past_90_days}&limit=100&todate={today}"
+    data = fetch_data(url_price_hist)
+    ticker.price_history = data
+
 def get_price_history(ticker):
     today = datetime.now().strftime("%Y-%m-%d")[:10]
     past_90_days = (datetime.now() - timedelta(90)).strftime("%Y-%m-%d")[:10]
