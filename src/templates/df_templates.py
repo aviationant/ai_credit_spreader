@@ -4,30 +4,42 @@ def get_df_template(df_type):
     if df_type == "trades":
         return pd.DataFrame(columns=[
             "Stock",
-            "Ticker",
             "Call/Put",
-            "Strike Cred.",
-            "Strike Deb.",
-            "Mid Credit",
-            "Mid Debit",
-            "Max Prof",
+            "Expiry",
+            "Short Strike",
+            "Long Strike",
+            "Short Delta",
+            "Long Delta",
+            "Short Vega",
+            "Long Vega",
+            "Short IV",
+            "Long IV",
+            "Short Bid",
+            "Long Ask",
+            "Spread",
+            "Max Profit",
             "Max Loss",
             "ROI",
-            "Score",
-            "Max Price"
+            "Score"
         ]).astype({
             "Stock": "string",
-            "Ticker": "string",
             "Call/Put": "string",
-            "Strike Cred.": "float64",
-            "Strike Deb.": "float64",
-            "Mid Credit": "float64",
-            "Mid Debit": "float64",
-            "Max Prof": "float64",
+            "Expiry": "string",
+            "Short Strike": "float64",
+            "Long Strike": "float64",
+            "Short Delta": "float64",
+            "Long Delta": "float64",
+            "Short Vega": "float64",
+            "Long Vega": "float64",
+            "Short IV": "float64",
+            "Long IV": "float64",
+            "Short Bid": "float64",
+            "Long Ask": "float64",
+            "Spread": "float64",
+            "Max Profit": "float64",
             "Max Loss": "float64",
             "ROI": "float64",
-            "Score": "float64",
-            "Max Price": "float64"
+            "Score": "float64"
         })
     
     elif df_type == "contracts":

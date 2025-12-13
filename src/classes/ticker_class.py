@@ -21,7 +21,7 @@ class Ticker:
         self.db: Database = db
 
     def get_price_data(self) -> None:
-        print("Gettting price data...")
+        print("Getting price data...")
         get_contract_list(self)
         get_price_history(self)
         
@@ -31,9 +31,14 @@ class Ticker:
     def get_predictions(self, db: Database) -> None:
         price_predictor(self, db)
 
-    def get_ticker_greeks(self) -> None:
-        for index, prediction in self.df_predictions.iterrows():
-            get_greeks(self, prediction)
+    def get_ticker_greeks(self, predict_bool) -> None:
+        if predict_bool == True:
+            for index, prediction in self.df_predictions.iterrows():
+                get_greeks(self, predict_bool, prediction)
+        else:
+            for date in self.unique_dates:
+                get_greeks(self, predict_bool)
+
 
     def filter_contracts_by_prediction(self) -> None:
         

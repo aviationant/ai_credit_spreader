@@ -10,11 +10,12 @@ CONTRACT_DAYS_MAX=float(os.environ.get("CONTRACT_DAYS_MAX"))
 
 def extract_last_trade(ticker, data: json) -> None:
     last_trade_string = data.get('data', {}).get('lastTrade')
-    last_trade = re.search("\$(\d+\.?\d*)", last_trade_string)
+    last_trade = re.search(r"\$(\d+\.?\d*)", last_trade_string)
     ticker.last_trade = float(last_trade.group(1))
 
-def convert_date(date_string) -> list[date, str]:
-    date_obj = datetime.strptime(f"{date_string} 2025", "%b %d %Y")
+def convert_date(url_string) -> list[date, str]:
+    date_string = re.search(r"--(\d{6})", url_string)[1]
+    date_obj = datetime.strptime(f"{date_string}", "%y%m%d")
     return date_obj, date_obj.strftime("%y%m%d")
 
 def trade_window(today: date, expiry_date: list[date, str]) -> True:
@@ -27,8 +28,8 @@ def build_contracts_table(ticker, data: json, today: date) -> pd.DataFrame:
     rows = data.get('data', {}).get('table', {}).get('rows', {})
     contracts = pd.DataFrame()
     for row in rows:
-        if not row["expiryDate"]: continue
-        expiry_date = convert_date(row["expiryDate"])
+        if not row["drillDownURL"]: continue
+        expiry_date = convert_date(row["drillDownURL"])
         if trade_window(today, expiry_date):
             if row["c_colour"]:
                 call_put = "P"

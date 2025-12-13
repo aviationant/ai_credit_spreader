@@ -1,0 +1,24 @@
+PICKUP
+
+Complete the algorithm for searching optimized trades. You've applied sorting:
+
+ticker.df_contracts = ticker.df_contracts.sort_values(by=["call_put", "expiry_date", "strike"]).reset_index(drop=True)
+
+Now determine traversal. Perhaps two tables for the temporary purpose of analysing short and long trades.
+
+For index ETF's, here is the get_contract_list URL
+
+https://api.nasdaq.com/api/quote/SPY/option-chain?assetclass=etf&limit=1000&fromdate=2025-12-11&todate=2026-01-30&excode=oprac&callput=callput&money=at&type=all
+
+Note SPY and assetclass=etf
+
+Once you can trust the trade finder algo, then it should screen correctly.
+Then work on a seperate prediction module.
+Consider building a seperate python program and passing data to it instead of trying to wrap
+all into this one with CUDA and all that.
+
+_______________________________________________________
+
+Trades populating much better. Need to tweak algorithm based on desired rankings.
+
+Add logic for .env TICKERS and INDEXES to be able to screen SPY etc.
