@@ -19,6 +19,10 @@ all into this one with CUDA and all that.
 
 _______________________________________________________
 
+
+#Branch test
+
+
 Trades populating much better. Need to tweak algorithm based on desired rankings.
 
 Add logic for .env TICKERS and INDEXES to be able to screen SPY etc.
