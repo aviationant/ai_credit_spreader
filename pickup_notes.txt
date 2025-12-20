@@ -26,3 +26,10 @@ _______________________________________________________
 Trades populating much better. Need to tweak algorithm based on desired rankings.
 
 Add logic for .env TICKERS and INDEXES to be able to screen SPY etc.
+
+________________________________________________________
+
+./utils/chronos_test.py utilizing both GPUs correctly and loading CSV historical
+Adjust num samples and amount of historical data to get 70%+ direction prediction
+Study chronos_test.py to understand ML modules
+./utils/backtester.py is what you're using to run tests, not chronos_test directly
