@@ -17,7 +17,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 DEVICE = "cuda"
 MODEL_NAME = "amazon/chronos-t5-large"
 PREDICTION_LENGTH = 30
-NUM_SAMPLES = 40          # Stable median + safe on dual 1070s
+NUM_SAMPLES = 10          # Stable median + safe on dual 1070s
 MAX_CONTEXT_DAYS = 126    # ~3 years of daily data — optimal for Chronos
 
 # Folder containing your CSV files (Schwab exports)
