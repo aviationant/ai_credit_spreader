@@ -1,29 +1,30 @@
 from dotenv import load_dotenv
 load_dotenv("./.env")
 from pymongo.database import Database
-from src.trade_finder import find_trades
-from src.classes.ticker_class import Ticker
+# from trades.trade_finder import find_trades
+# from classes.ticker_class import Ticker
 from api.mongo_api import connect_to_db
+from companies.build_companies_df import build_companies_df
+from trades.build_trades_df import build_trades_df
 import pandas as pd
 import os
 
-ticker_string = os.environ.get("TICKERS")
-tickers = ticker_string.split(",")
+companies_string = os.environ.get("COMPANIES")
+companies = companies_string.split(",")
 predict_bool = os.environ.get("PREDICT")
 
-print(ticker_string)
-
 def main():
+    global companies
+    print(companies_string)
+    companies, df_companies = build_companies_df(companies, predict_bool)
+    df_trades = build_trades_df(companies, df_companies)
+    exit()
+
+
     db: Database = connect_to_db()
     companies = []
     i=0
     for ticker in tickers:
-        company = Ticker(ticker, db)
-        company.get_price_data()
-        company.get_unique_dates()
-        #if predict_bool == True :
-        #    company.get_predictions(db)
-        #    company.filter_contracts_by_prediction()
         company.get_ticker_greeks(predict_bool)
         company.filter_contracts_by_greeks()
         find_trades(company)

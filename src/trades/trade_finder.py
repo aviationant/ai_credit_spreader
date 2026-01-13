@@ -1,5 +1,5 @@
 import pandas as pd
-from src.classes.ticker_class import Ticker
+from classes.ticker_class import Ticker
 from dotenv import load_dotenv
 load_dotenv("./.env")
 import os

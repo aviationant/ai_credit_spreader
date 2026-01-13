@@ -14,7 +14,7 @@ def extract_last_trade(ticker, data: json) -> None:
     ticker.last_trade = float(last_trade.group(1))
 
 def convert_date(url_string) -> list[date, str]:
-    date_string = re.search(r"--(\d{6})", url_string)[1]
+    date_string = re.search(r"-+([0-9]{6})", url_string)[1]
     date_obj = datetime.strptime(f"{date_string}", "%y%m%d")
     return date_obj, date_obj.strftime("%y%m%d")
 

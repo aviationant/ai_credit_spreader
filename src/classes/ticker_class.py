@@ -1,9 +1,9 @@
-from src.templates.df_templates import get_df_template
+from templates.df_templates import get_df_template
 from api.nasdaq_api import get_contract_list, get_price_history, get_greeks
 from api.mongo_api import add_db_items
 import pandas as pd
 from pymongo.database import Database
-from src.price_predictor import price_predictor
+from price_predictor import price_predictor
 import os
 
 DELTA_MAX = float(os.environ.get("DELTA_MAX"))
@@ -21,7 +21,7 @@ class Ticker:
         self.db: Database = db
 
     def get_price_data(self) -> None:
-        print("Getting price data...")
+        # print("Getting price data...")
         get_contract_list(self)
         get_price_history(self)
         

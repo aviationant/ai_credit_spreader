@@ -33,3 +33,26 @@ ________________________________________________________
 Adjust num samples and amount of historical data to get 70%+ direction prediction
 Study chronos_test.py to understand ML modules
 ./utils/backtester.py is what you're using to run tests, not chronos_test directly
+
+________________________________________________________
+
+Pull data.
+
+TA Module:
+    Generate SMA windows - fast/slow
+    Get X day streak
+    Build to allow future predictor
+
+Build df_companies for company with X day outlook and SMA outlook
+
+Pull greeks for just directional (to same download time and reduce requests)
+
+Build trades per ENV variables in df_trades
+
+________________________________________________________
+
+ADD EARNINGS FILTER!!!!!!!!!!!!!
+
+________________________________________________________
+
+Fix the contract greek fetching
