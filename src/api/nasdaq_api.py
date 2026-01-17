@@ -18,20 +18,15 @@ def add_greeks_to_contract(index: int, greeks_dict: dict, prices_dict: dict, tic
         ticker.df_contracts.at[index, col] = value
 
 def get_greeks(company):
-    if company.direction == 'bull':
-        contracts = company.df_contracts[company.df_contracts['call_put'] == 'P'].reset_index(drop=True)
-    else:
-        contracts = company.df_contracts[company.df_contracts['call_put'] == 'C'].reset_index(drop=True)
-         
     def task_function(contract):
         return fetch_greeks_for_contract(company, contract)
-
-    results = thread_map(task_function, contracts.itertuples(), max_workers=15, desc=f"Fetching data...",
-                ascii=" ░▒▓█", colour="#00FF00")
+    
+    contracts = list(company.df_contracts.itertuples())
+    results = thread_map(task_function, contracts, max_workers=15, desc=f"Fetching greeks for {company.ticker}...", ascii=True, colour="#327DA0")
     
     for index, result in enumerate(results):
         if result[0] is not None and result[1] is not None:
-            add_greeks_to_contract(index, result[0], result[1], company, contracts.loc[index])
+            add_greeks_to_contract(index, result[0], result[1], company, company.df_contracts.loc[index])
 
 def fetch_greeks_for_contract(company, contract):
     try:

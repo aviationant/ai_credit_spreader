@@ -8,8 +8,12 @@ from tqdm.contrib.concurrent import thread_map
 from datetime import datetime
 import json
 import re
+import os
 
 companies_array = []
+
+DELTA_MAX = float(os.environ.get("DELTA_MAX"))
+DELTA_MIN = float(os.environ.get("DELTA_MIN"))
 
 class Company:
     def __init__(self, ticker: str) -> None:
@@ -17,6 +21,7 @@ class Company:
         self.df_contracts: pd.DataFrame = get_df_template("contracts")
         self.last_trade: float = 0.0
         self.df_prices: pd.DataFrame = get_df_template("price_history")
+        self.df_trades: pd.DataFrame = get_df_template("trades")
         self.expiry_dates: list[str] = []
         self.earnings_date: str
         self.direction: str = ""
@@ -57,6 +62,12 @@ class Company:
             for date in self.expiry_dates:
                 get_greeks(self)
 
+    def filter_contracts_by_greeks(self) -> None:
+        self.df_contracts = self.df_contracts[
+            (abs((self.df_contracts['delta'])) >= DELTA_MIN) &
+            (abs((self.df_contracts['delta'])) <= DELTA_MAX)
+            ].reset_index(drop=True)
+
     def build_df_row(self, df_companies, SMA_fast_slope, SMA_slow_slope, dir_streak) -> None:
         df_companies.loc[len(df_companies)] = [
             self.ticker,
@@ -82,7 +93,7 @@ def task_fetch_prices(company):
 def build_companies_df(companies, predict_bool):
     df_companies = get_df_template("companies")
     thread_map(task_fetch_prices, companies, max_workers=15, desc=f"Fetching data...",
-                    ascii=" ░▒▓█", colour="#00FF00")
+                    ascii=True, colour="#327DA0")
     for current_comp in companies_array:
         current_comp.get_expiry_dates()
         if predict_bool == "True":

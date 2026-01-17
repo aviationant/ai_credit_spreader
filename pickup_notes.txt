@@ -56,3 +56,7 @@ ADD EARNINGS FILTER!!!!!!!!!!!!!
 ________________________________________________________
 
 Fix the contract greek fetching
+
+________________________________________________________
+
+Changes spread pricing to mid for long and short

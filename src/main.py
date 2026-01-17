@@ -12,12 +12,28 @@ import os
 companies_string = os.environ.get("COMPANIES")
 companies = companies_string.split(",")
 predict_bool = os.environ.get("PREDICT")
+max_spread = float(os.environ.get("MAX_SPREAD"))
 
 def main():
     global companies
     print(companies_string)
     companies, df_companies = build_companies_df(companies, predict_bool)
     df_trades = build_trades_df(companies, df_companies)
+    all_trades_dfs = [
+        company.df_trades.loc[(company.df_trades["max_profit"] > 0) &
+                              (company.df_trades["ROI"] > 0.15) &
+                              (company.df_trades["spread"] <= max_spread)]
+        .sort_values(by="score")
+        for company in companies 
+        if not company.df_trades.empty
+        ]
+    if all_trades_dfs:
+        df_master_trades = pd.concat(all_trades_dfs, ignore_index=True)
+        df_master_trades = df_master_trades.sort_values(by="score", ascending=False).reset_index(drop=True)
+    else:
+        print("No trade data available from any company.")
+    df_master_trades.to_excel('master_trades.xlsx')
+    print(df_master_trades)
     exit()
 
 

@@ -1,5 +1,5 @@
 import pandas as pd
-from classes.ticker_class import Ticker
+# from classes.ticker_class import Ticker
 from dotenv import load_dotenv
 load_dotenv("./.env")
 import os
@@ -9,7 +9,7 @@ weight_delta = float(os.environ.get("WEIGHT_DELTA"))
 weight_vega = float(os.environ.get("WEIGHT_VEGA"))
 weight_iv = float(os.environ.get("WEIGHT_IV"))
 
-def build_trade_old(ticker: Ticker, contract: pd.DataFrame, metrics: dict):
+def build_trade_old(company, contract: pd.DataFrame, metrics: dict):
     mid_price_credit = (metrics["bid_credit"] + metrics["ask_credit"]) / 2
     mid_price_debit = (metrics["bid_debit"] + metrics["ask_debit"]) / 2
     if contract.call_put == "P":
@@ -38,18 +38,18 @@ def build_trade_old(ticker: Ticker, contract: pd.DataFrame, metrics: dict):
             "Score": 0.0,
             "Min Price": min_price
         }
-        if len(ticker.df_trades):
-            tradeIndex = [len(ticker.df_trades)]
+        if len(company.df_trades):
+            tradeIndex = [len(company.df_trades)]
         else:
-            ticker.df_trades = ticker.df_trades.dropna(axis=1, how='all')
+            company.df_trades = company.df_trades.dropna(axis=1, how='all')
             tradeIndex = [0]
         return pd.DataFrame(trade, index=tradeIndex)
 
-def segment_contracts(ticker: Ticker):
+def segment_contracts(company):
     segments = []
-    for date in ticker.unique_dates:
-        df_puts = ticker.df_contracts[(ticker.df_contracts["call_put"] == "P") & (ticker.df_contracts["expiry_date"] == date)].copy()
-        df_calls = ticker.df_contracts[(ticker.df_contracts["call_put"] == "C") & (ticker.df_contracts["expiry_date"] == date)].copy()
+    for date in company.expiry_dates:
+        df_puts = company.df_contracts[(company.df_contracts["call_put"] == "P") & (company.df_contracts["expiry_date"] == date)].copy()
+        df_calls = company.df_contracts[(company.df_contracts["call_put"] == "C") & (company.df_contracts["expiry_date"] == date)].copy()
         df_puts = df_puts.sort_values(by="strike", ascending=False).reset_index(drop=True)
         df_calls = df_calls.sort_values(by="strike").reset_index(drop=True)
         segments.append(df_puts)
@@ -57,13 +57,13 @@ def segment_contracts(ticker: Ticker):
     return segments
 
 
-def add_trades(ticker: Ticker):
-    #ticker.df_contracts = ticker.df_contracts.sort_values(by=["call_put", "expiry_date", "strike"]).reset_index(drop=True)
-    #print(ticker.df_contracts[["stock", "expiry_date", "strike", "call_put", "delta", "bid", "ask"]])
+def add_trades(company):
+    #company.df_contracts = company.df_contracts.sort_values(by=["call_put", "expiry_date", "strike"]).reset_index(drop=True)
+    #print(company.df_contracts[["stock", "expiry_date", "strike", "call_put", "delta", "bid", "ask"]])
 
     trades = []
     #Break up into segments of contracts by call/put and expiration
-    segments = segment_contracts(ticker)
+    segments = segment_contracts(company)
     for df in segments:
         for index, contract in df.iterrows():
             if index >= len(df)-1: continue
@@ -82,39 +82,43 @@ def add_trades(ticker: Ticker):
                 trade["short_iv"] = float(contract["imp_vol"])
                 trade["long_iv"] = float(df.iloc[index+k]["imp_vol"])
                 trade["short_bid"] = float(contract["bid"])
+                trade["short_ask"] = float(contract["ask"])
+                trade["long_bid"] = float(df.iloc[index+k]["bid"])
                 trade["long_ask"] = float(df.iloc[index+k]["ask"])
                 trade["spread"] = 0.0
                 trade["max_profit"] = 0.0
                 trade["max_loss"] = 0.0
                 trade["ROI"] = 0.0
                 trade["score"] = 0.0
-                if len(ticker.df_trades):
-                    tradeIndex = [len(ticker.df_trades)]
+                if len(company.df_trades):
+                    tradeIndex = [len(company.df_trades)]
                 else:
-                    ticker.df_trades = ticker.df_trades.dropna(axis=1, how='all')
+                    company.df_trades = company.df_trades.dropna(axis=1, how='all')
                     tradeIndex = [0]
-                ticker.df_trades = pd.concat([
-                    ticker.df_trades, 
+                company.df_trades = pd.concat([
+                    company.df_trades, 
                     pd.DataFrame(trade, index=tradeIndex)
                     ], ignore_index=False)
                 k += 1
 
 #Calculate spread, max_prof, max_loss, ROI, and score
-def calc_trades(ticker: Ticker):
-    for index, trade in ticker.df_trades.iterrows():
+def calc_trades(company):
+    for index, trade in company.df_trades.iterrows():
+        short_mid = (trade["short_bid"] + trade["short_ask"]) / 2
+        long_mid = (trade["long_bid"] + trade["long_ask"]) / 2
         spread = abs((trade["short_strike"] - trade["long_strike"]) * 100)
-        max_profit = (trade["short_bid"] - trade["long_ask"]) * 100
+        max_profit = (short_mid - long_mid) * 100
         max_loss = spread - max_profit
         roi = max_profit / max_loss
         score = roi * weight_roi + (1 - abs(trade["short_delta"])) * weight_delta + trade["short_vega"] * weight_vega + trade["short_iv"] * weight_iv
-        ticker.df_trades.loc[index, "spread"] = spread
-        ticker.df_trades.loc[index, "max_profit"] = max_profit
-        ticker.df_trades.loc[index, "max_loss"] = max_loss
-        ticker.df_trades.loc[index, "ROI"] = roi
-        ticker.df_trades.loc[index, "score"] = score
+        company.df_trades.loc[index, "spread"] = spread
+        company.df_trades.loc[index, "max_profit"] = max_profit
+        company.df_trades.loc[index, "max_loss"] = max_loss
+        company.df_trades.loc[index, "ROI"] = roi
+        company.df_trades.loc[index, "score"] = score
         
 
-    # for index, contract in ticker.df_contracts.iterrows():
+    # for index, contract in company.df_contracts.iterrows():
     #     try:
     #         metrics = {}
     #         metrics["strike_credit"] = float(contract.strike)/1000
@@ -123,37 +127,37 @@ def calc_trades(ticker: Ticker):
     #         k = 1
     #         while(index - k >= 0 and
     #             contract.call_put == "P" and
-    #             contract.expiry_date == ticker.df_contracts.iloc[index-k]["expiry_date"] and
-    #             contract.call_put == ticker.df_contracts.iloc[index-k]["call_put"]):
-    #                 metrics["strike_debit"] = float(ticker.df_contracts.iloc[index-k]["strike"])/1000
-    #                 metrics["bid_debit"] = ticker.df_contracts.iloc[index-k]['bid']
-    #                 metrics["ask_debit"] = ticker.df_contracts.iloc[index-k]['ask']
+    #             contract.expiry_date == company.df_contracts.iloc[index-k]["expiry_date"] and
+    #             contract.call_put == company.df_contracts.iloc[index-k]["call_put"]):
+    #                 metrics["strike_debit"] = float(company.df_contracts.iloc[index-k]["strike"])/1000
+    #                 metrics["bid_debit"] = company.df_contracts.iloc[index-k]['bid']
+    #                 metrics["ask_debit"] = company.df_contracts.iloc[index-k]['ask']
     #                 k += 1
-    #         while(index + k < len(ticker.df_contracts) and
+    #         while(index + k < len(company.df_contracts) and
     #             contract.call_put == "C" and
-    #             contract.expiry_date == ticker.df_contracts.iloc[index+k]["expiry_date"] and
-    #             contract.call_put == ticker.df_contracts.iloc[index+k]["call_put"]):
-    #                 metrics["strike_debit"] = float(ticker.df_contracts.iloc[index+k]["strike"])/1000
-    #                 metrics["bid_debit"] = ticker.df_contracts.iloc[index+k]['bid']
-    #                 metrics["ask_debit"] = ticker.df_contracts.iloc[index+k]['ask']
+    #             contract.expiry_date == company.df_contracts.iloc[index+k]["expiry_date"] and
+    #             contract.call_put == company.df_contracts.iloc[index+k]["call_put"]):
+    #                 metrics["strike_debit"] = float(company.df_contracts.iloc[index+k]["strike"])/1000
+    #                 metrics["bid_debit"] = company.df_contracts.iloc[index+k]['bid']
+    #                 metrics["ask_debit"] = company.df_contracts.iloc[index+k]['ask']
     #                 k += 1
     #         build_trade(ticker, contract, metrics)
     #     except: continue
     #     df_trade = build_trade(ticker, contract, metrics)
-    #     ticker.df_trades = pd.concat([ticker.df_trades, df_trade], ignore_index=False)
+    #     company.df_trades = pd.concat([company.df_trades, df_trade], ignore_index=False)
 
-# def trade_filter(ticker):
-#     for index, trade in ticker.df_trades.iterrows():
-#         ticker.df_trades.loc[index, 'Score'] = (trade.ROI - abs(float(trade.Delta))) / trade.ROI
-#     ticker.df_trades = ticker.df_trades.sort_values(by=["Stock", "Score"], ascending=False).reset_index(drop=True)
+# def trade_filter(company):
+#     for index, trade in company.df_trades.iterrows():
+#         company.df_trades.loc[index, 'Score'] = (trade.ROI - abs(float(trade.Delta))) / trade.ROI
+#     company.df_trades = company.df_trades.sort_values(by=["Stock", "Score"], ascending=False).reset_index(drop=True)
 #     trades_to_drop = []
-#     for stock in ticker.df_trades.Stock.unique():
-#         stockIndex = ticker.df_trades.Stock.eq(stock).idxmax()
-#         for index, trade in ticker.df_trades.iterrows():
+#     for stock in company.df_trades.Stock.unique():
+#         stockIndex = company.df_trades.Stock.eq(stock).idxmax()
+#         for index, trade in company.df_trades.iterrows():
 #             if trade.Stock == stock and index >= stockIndex + 3:
 #                 trades_to_drop.append(index)
-#     ticker.df_trades = ticker.df_trades.drop(trades_to_drop).reset_index(drop=True)
+#     company.df_trades = company.df_trades.drop(trades_to_drop).reset_index(drop=True)
 
-def find_trades(ticker: Ticker):
-    add_trades(ticker)
-    calc_trades(ticker)
+def find_trades(company):
+    add_trades(company)
+    calc_trades(company)
