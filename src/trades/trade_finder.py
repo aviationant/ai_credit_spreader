@@ -75,12 +75,12 @@ def add_trades(company):
                 trade["expiry_date"] = contract["expiry_date"]
                 trade["short_strike"] = float(contract["strike"]) / 1000
                 trade["long_strike"] = float(df.iloc[index+k]["strike"]) / 1000
-                trade["short_delta"] = float(contract["delta"])
-                trade["long_delta"] = float(df.iloc[index+k]["delta"])
-                trade["short_vega"] = float(contract["vega"])
-                trade["long_vega"] = float(df.iloc[index+k]["vega"])
-                trade["short_iv"] = float(contract["imp_vol"])
-                trade["long_iv"] = float(df.iloc[index+k]["imp_vol"])
+                trade["short_delta"] = round(float(contract["delta"]), 3)
+                trade["long_delta"] = round(float(df.iloc[index+k]["delta"]), 3)
+                trade["short_vega"] = round(float(contract["vega"]), 3)
+                trade["long_vega"] = round(float(df.iloc[index+k]["vega"]), 3)
+                trade["short_iv"] = round(float(contract["imp_vol"]), 3)
+                trade["long_iv"] = round(float(df.iloc[index+k]["imp_vol"]), 3)
                 trade["short_bid"] = float(contract["bid"])
                 trade["short_ask"] = float(contract["ask"])
                 trade["long_bid"] = float(df.iloc[index+k]["bid"])
@@ -114,8 +114,8 @@ def calc_trades(company):
         company.df_trades.loc[index, "spread"] = spread
         company.df_trades.loc[index, "max_profit"] = max_profit
         company.df_trades.loc[index, "max_loss"] = max_loss
-        company.df_trades.loc[index, "ROI"] = roi
-        company.df_trades.loc[index, "score"] = score
+        company.df_trades.loc[index, "ROI"] = round(roi, 3)
+        company.df_trades.loc[index, "score"] = round(score, 3)
         
 
     # for index, contract in company.df_contracts.iterrows():

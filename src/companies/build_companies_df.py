@@ -75,38 +75,45 @@ class Company:
             self.direction,
             self.expiry_dates,
             self.earnings_date,
-            SMA_fast_slope,
-            SMA_slow_slope,
+            round(SMA_fast_slope, 3),
+            round(SMA_slow_slope, 3),
             dir_streak
         ]
 
-def task_fetch_prices(company):
-    global companies_array
-    current_comp = Company(company)
-    current_comp.get_price_data()
-    try:
-        current_comp.get_earnings_date()
-    except:
-        current_comp.earnings_date = ""
-    companies_array.append(current_comp)
+
 
 def build_companies_df(companies, predict_bool):
     df_companies = get_df_template("companies")
-    thread_map(task_fetch_prices, companies, max_workers=15, desc=f"Fetching data...",
+    companies_array = []
+
+    def task_fetch_prices(company):
+        try:
+            current_comp = Company(company)
+            current_comp.get_price_data()
+            try:
+                current_comp.get_earnings_date()
+            except:
+                current_comp.earnings_date = ""
+            companies_array.append(current_comp)
+        except: return
+
+    thread_map(task_fetch_prices, companies, max_workers=20, desc=f"Fetching data...",
                     ascii=True, colour="#327DA0")
     for current_comp in companies_array:
-        current_comp.get_expiry_dates()
-        if predict_bool == "True":
-           [current_comp.direction,
-            SMA_fast_slope,
-            SMA_slow_slope,
-            current_comp.dir_streak] = get_direction(current_comp.df_prices)
-        else: current_comp.direction = "bull"
-        current_comp.build_df_row(df_companies, SMA_fast_slope, SMA_slow_slope, current_comp.dir_streak)
+        try:
+            current_comp.get_expiry_dates()
+            if predict_bool == "True":
+                [current_comp.direction,
+                SMA_fast_slope,
+                SMA_slow_slope,
+                current_comp.dir_streak] = get_direction(current_comp.df_prices)
+            else: current_comp.direction = "bull"
+            current_comp.build_df_row(df_companies, SMA_fast_slope, SMA_slow_slope, current_comp.dir_streak)
+        except: continue    
         df_companies = df_companies.sort_values(by="dir_streak", ascending=False).reset_index(drop=True)
-    print(df_companies[
-        (df_companies["direction"] != "none") & 
-        (df_companies["expiry_dates"].str.len() > 0) &
-        (df_companies["dir_streak"] >= 12) &
-        (df_companies["dir_streak"] <= 33)].head(40))
+    # print(df_companies[
+    #     (df_companies["direction"] != "none") & 
+    #     (df_companies["expiry_dates"].str.len() > 0) &
+    #     (df_companies["dir_streak"] >= 12) &
+    #     (df_companies["dir_streak"] <= 33)].head(40))
     return companies_array, df_companies

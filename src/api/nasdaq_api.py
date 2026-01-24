@@ -22,7 +22,7 @@ def get_greeks(company):
         return fetch_greeks_for_contract(company, contract)
     
     contracts = list(company.df_contracts.itertuples())
-    results = thread_map(task_function, contracts, max_workers=15, desc=f"Fetching greeks for {company.ticker}...", ascii=True, colour="#327DA0")
+    results = thread_map(task_function, contracts, max_workers=20, desc=f"Fetching greeks for {company.ticker}...", ascii=True, colour="#327DA0")
     
     for index, result in enumerate(results):
         if result[0] is not None and result[1] is not None:

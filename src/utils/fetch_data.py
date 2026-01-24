@@ -28,7 +28,7 @@ REFERERS = [
     None,  # No referer sometimes
 ]
 
-def fetch_data(url: str, session: Optional[requests.Session] = None, min_delay: float = 0.1, max_delay: float = 0.3) -> Optional[str]:
+def fetch_data(url: str, session: Optional[requests.Session] = None, min_delay: float = 0.1, max_delay: float = 0.4) -> Optional[str]:
     """
     Fetches data from the URL with randomized headers and delay.
     Use a shared session for multiple calls to reuse connections.

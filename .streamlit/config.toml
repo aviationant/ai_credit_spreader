@@ -1,0 +1,13 @@
+[theme]
+primaryColor = "#d4ffcc"           # Accent color (buttons, links, etc)
+backgroundColor = "#0a0b0d"         # Main background
+secondaryBackgroundColor = "#1a1e3a"  # Sidebar, code blocks, inputs
+textColor = "#a3ff8f"              # Main text color
+font = "sans serif"                # Font family
+
+[server]
+headless = true                    # Don't open browser automatically
+port = 8501                        # Default port
+
+[browser]
+gatherUsageStats = false           # Disable telemetry
